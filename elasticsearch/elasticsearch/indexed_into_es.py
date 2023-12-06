@@ -80,27 +80,18 @@ mapping = {
 #temp = es.index(index='discrepancy', body=mapping)
 #print(temp)
 
-data = [ discrepancy_dict ]
-def format_data_for_bulk(data):
-    for doc in data:
-        yield {
-            "_index": "discrepancy",
-            "_source": "doc"
+actions = [
+  {
+    "_op_type": "index",
+    "_index": "discrepancy",
+    "_source": doc
+  }for doc in discrepancy_dict
+]
 
-        }
+success, failed = helpers.bulk(es, actions)
+print(f"Successfully inserted {success} documents.")
+print(f"Failed to insert {failed} documents.")
 
-try:
-    mode = 'bulk'
-    if mode == 'doc':
-        import requests
-        for id, row in enumerate(discrepancy_dict):
-            res = requests.post(f'http://localhost:9200/discrepancy/_doc/{id}', json=row)
-    else:
-    # Perform bulk insert
-        success, failed = helpers.bulk(client=es, actions=format_data_for_bulk(data))
-    print(f"Successfully inserted {success} documents.")
-    print(f"Failed to insert {failed} documents.")
-except helpers.BulkIndexError as e:
-    print(f"{len(e.errors)} document(s) failed to index.")
-    for err in e.errors:
-        print(err)
+
+
+
