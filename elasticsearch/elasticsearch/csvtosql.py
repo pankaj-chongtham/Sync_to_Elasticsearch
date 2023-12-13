@@ -10,7 +10,7 @@ column_name = 'description'
 
 # Establish a connection to the database
 conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};'
-                        'SERVER=localhost\SQLEXPRESS;'
+                        'SERVER=localhost\DESKTOP-EKJH7K7;'
                         'DATABASE=master;'
                         'Trusted_Connection=yes;')
 
