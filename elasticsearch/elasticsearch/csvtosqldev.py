@@ -6,7 +6,7 @@ conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};'
                         'DATABASE=checkcdc;'
                         'Trusted_Connection=yes;')
 
-cursor = conn.cursor()
+#cursor = conn.cursor()
 
 csv_file_path = 'C:\\Users\\yuvag\\Downloads\\master.csv'
 
@@ -17,7 +17,7 @@ table_name = 'discrepancy'
 df = pd.read_csv(csv_file_path)
 
 # Insert data into SQL Server table
-df.to_sql(name=table_name, con=conn)
+df.to_sql(name=table_name, con=conn, schema='dbo', if_exists='replace', index=False)
 
 # Close the connection
 conn.close()

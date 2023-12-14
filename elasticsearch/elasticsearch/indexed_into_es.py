@@ -2,15 +2,15 @@ import pandas as pd
 import pyodbc
 from elasticsearch import Elasticsearch, helpers
 conn = pyodbc.connect('DRIVER={ODBC Driver 17 for SQL Server};'
-                        'SERVER=localhost\SQLEXPRESS;'
-                        'DATABASE=master;'
+                        'SERVER=DESKTOP-EKJH7K7;'
+                        'DATABASE=checkcdc;'
                         'Trusted_Connection=yes;')
 cursor = conn.cursor()
 
 es = Elasticsearch([{'host': 'localhost', 'port': 9200, 'scheme': 'http'}])
 
 discrepancy_df = pd.read_sql("select * from discrepancy", con = conn)
-discrepancy_df['discrepencycreationdate'] = discrepancy_df['discrepencycreationdate'].astype(str)
+#discrepancy_df['discrepencycreationdate'] = discrepancy_df['discrepencycreationdate'].astype(str)
 discrepancy_dict = discrepancy_df.to_dict(orient='records')
 print(discrepancy_dict)
 
