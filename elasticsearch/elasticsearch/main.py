@@ -1,4 +1,5 @@
 # System Imports
+import json
 import os
 import sys
 import time
@@ -164,39 +165,51 @@ def sync():
         elastic_index = row['Elstc_indx_name']
         parent_id = row['Elstc_search_id']
         push_query = row['Elstc_push_query']
+        cdcdata_path = os.path.join(CURRENT_PATH, 'cdcdata', 'lsn.json')
+        isExist = os.path.exists(cdcdata_path)
+        if not isExist:
+            os.makedirs(cdcdata_path)
+        with open(os.path.join(CURRENT_PATH, 'cdcdata', 'lsn.json'), 'r') as f:
+            lsn_info = json.load(f)
         try:
-            row_count = pd.read_sql(f"select count(*) from {table_name} with(nolock)", con=conn)
-            row_count = row_count.loc[0].item()
-            table_type = cursor.execute(f'sp_help {table_name}').fetchall()[0][2]
-            if row_count > MAX_ROW and table_type == 'user table':
-                parent_table_df = multiprocess_df(row_count=row_count, ids=parent_id, table=table_name,
-                                                  query=push_query)
-            elif row_count < MAX_ROW or table_type == 'view':
-                # GETTING DATETIME AND TIMESTAMP DATATYPE FROM TABLE
-                app_log.info('Parsing Datetime and Timestamp datatype...')
-                parse_dates, timestamp, binary = get_parse_dates(dbconnect=conn, table=table_name)
-                if push_query != '*':
-                    parse_dates = list(
-                        set([item.strip() for item in push_query.split(',')]).intersection(set(parse_dates)))
-                    timestamp = list(
-                        set([item.strip() for item in push_query.split(',')]).intersection(set(timestamp))),
-                    binary = list(set([item.strip() for item in push_query.split(',')]).intersection(set(binary)))
-                app_log.info(f'Reading Parent table: {table_name}')
-                parent_table_df = pd.read_sql('SELECT {} FROM {}'.format(push_query, table_name),
-                                              con=conn,
-                                              parse_dates=parse_dates).replace(REPLACER)
-                # CONVERTING TIMESTAMP FORMAT INTO HEX STRING
-                app_log.info('Creating Compatibility Timestamp Datatype...')
-                column = 0
-                timestamp_binary = []
-                timestamp_binary.extend(timestamp)
-                timestamp_binary.extend(binary)
-                timestamp_binary = [element for innerList in timestamp_binary for element in innerList]
-                while column < len(timestamp_binary):
-                    parent_table_df[timestamp_binary[column]] = parent_table_df[timestamp_binary[column]].apply(
-                        lambda v: v.hex())
-                    parent_table_df[timestamp_binary[column]] = parent_table_df[timestamp_binary[column]].astype(str)
-                    column += 1
+            if parent_id in lsn_info:
+                # table records needs to get from cdc query
+                pass
+                # logic to be completed
+                
+            else:
+                row_count = pd.read_sql(f"select count(*) from {table_name} with(nolock)", con=conn)
+                row_count = row_count.loc[0].item()
+                table_type = cursor.execute(f'sp_help {table_name}').fetchall()[0][2]
+                if row_count > MAX_ROW and table_type == 'user table':
+                    parent_table_df = multiprocess_df(row_count=row_count, ids=parent_id, table=table_name,
+                                                      query=push_query)
+                elif row_count < MAX_ROW or table_type == 'view':
+                    # GETTING DATETIME AND TIMESTAMP DATATYPE FROM TABLE
+                    app_log.info('Parsing Datetime and Timestamp datatype...')
+                    parse_dates, timestamp, binary = get_parse_dates(dbconnect=conn, table=table_name)
+                    if push_query != '*':
+                        parse_dates = list(
+                            set([item.strip() for item in push_query.split(',')]).intersection(set(parse_dates)))
+                        timestamp = list(
+                            set([item.strip() for item in push_query.split(',')]).intersection(set(timestamp))),
+                        binary = list(set([item.strip() for item in push_query.split(',')]).intersection(set(binary)))
+                    app_log.info(f'Reading Parent table: {table_name}')
+                    parent_table_df = pd.read_sql('SELECT {} FROM {}'.format(push_query, table_name),
+                                                  con=conn,
+                                                  parse_dates=parse_dates).replace(REPLACER)
+                    # CONVERTING TIMESTAMP FORMAT INTO HEX STRING
+                    app_log.info('Creating Compatibility Timestamp Datatype...')
+                    column = 0
+                    timestamp_binary = []
+                    timestamp_binary.extend(timestamp)
+                    timestamp_binary.extend(binary)
+                    timestamp_binary = [element for innerList in timestamp_binary for element in innerList]
+                    while column < len(timestamp_binary):
+                        parent_table_df[timestamp_binary[column]] = parent_table_df[timestamp_binary[column]].apply(
+                            lambda v: v.hex())
+                        parent_table_df[timestamp_binary[column]] = parent_table_df[timestamp_binary[column]].astype(str)
+                        column += 1
         # ----------------------------------------------------
         # GETTING TABLE DATA INTO DATAFRAME
         # ----------------------------------------------------
