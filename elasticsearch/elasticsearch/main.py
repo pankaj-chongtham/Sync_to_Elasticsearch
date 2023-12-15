@@ -222,3 +222,7 @@ def sync():
             app_log.error(traceback.format_exc())
     end = time.perf_counter()
     app_log.info('Execution time: {}'.format(end - start))
+
+
+if __name__ == '__main__':
+    sync()

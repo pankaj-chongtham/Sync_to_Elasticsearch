@@ -9,9 +9,9 @@ import configparser
 from logging.handlers import RotatingFileHandler
 
 # custom imports
-import ramcolog
+import synclog
 
-app_log = ramcolog.app_log
+app_log = synclog.setup_logger()
 
 if getattr(sys, 'frozen', False):
     # we are running in a bundle
