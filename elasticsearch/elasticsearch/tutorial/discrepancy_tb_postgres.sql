@@ -1,3 +1,4 @@
+
 create table discrepancy_dw(
 	execworkcenter VARCHAR(8),
 	atano CHAR(5), 
